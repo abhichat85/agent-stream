@@ -1,0 +1,38 @@
+{
+  "name": "@agent-stream/react",
+  "version": "0.1.0",
+  "description": "React hook + client for the agent-stream SSE protocol",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14",
+    "@types/react": "^18",
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^24",
+    "react": "^18",
+    "react-dom": "^18",
+    "tsup": "^8",
+    "typescript": "^5",
+    "vitest": "^1"
+  },
+  "keywords": [
+    "llm",
+    "ai-agents",
+    "sse",
+    "streaming",
+    "react",
+    "hook"
+  ]
+}
