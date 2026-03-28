@@ -1,0 +1,20 @@
+{
+  "name": "agent-stream-react-example",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4",
+    "typescript": "^5",
+    "vite": "^5"
+  },
+  "note": "Install @agent-stream/react from npm when published. For local dev: npm install ../../packages/react"
+}
