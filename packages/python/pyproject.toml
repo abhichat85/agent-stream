@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "agent-event-stream"
 version = "0.1.0"
 description = "Typed SSE event protocol for AI agents — token, tool_use, thinking, progress, done"
+authors = [{ name = "Abhishek", email = "abhichat85@gmail.com" }]
 license = { text = "MIT" }
 requires-python = ">=3.11"
 keywords = ["llm", "ai-agents", "sse", "streaming", "fastapi", "anthropic", "openai"]
@@ -15,8 +16,15 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
 ]
+
+[project.urls]
+Homepage = "https://github.com/abhichat85/agent-stream"
+Repository = "https://github.com/abhichat85/agent-stream"
+Issues = "https://github.com/abhichat85/agent-stream/issues"
+Changelog = "https://github.com/abhichat85/agent-stream/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.100"]
