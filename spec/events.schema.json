@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "agent-stream Event Protocol",
+  "description": "Typed SSE event schema for AI agent streaming. Each event is formatted as: event: <type>\\ndata: <json>\\n\\n",
+  "definitions": {
+    "TokenEvent": {
+      "description": "Incremental text chunk from the agent",
+      "type": "object",
+      "required": ["text"],
+      "properties": { "text": { "type": "string" } }
+    },
+    "ThinkingEvent": {
+      "description": "Extended reasoning / chain-of-thought block (collapsible in UI)",
+      "type": "object",
+      "required": ["text"],
+      "properties": { "text": { "type": "string" } }
+    },
+    "ToolUseEvent": {
+      "description": "Tool invocation started",
+      "type": "object",
+      "required": ["tool_name", "tool_use_id", "status"],
+      "properties": {
+        "tool_name":     { "type": "string" },
+        "tool_use_id":   { "type": "string" },
+        "status":        { "type": "string", "enum": ["running"] },
+        "input_summary": { "type": "string" }
+      }
+    },
+    "ToolResultEvent": {
+      "description": "Tool execution completed",
+      "type": "object",
+      "required": ["tool_name", "tool_use_id", "status"],
+      "properties": {
+        "tool_name":      { "type": "string" },
+        "tool_use_id":    { "type": "string" },
+        "status":         { "type": "string", "enum": ["done", "error"] },
+        "output_summary": { "type": "string" },
+        "duration_ms":    { "type": "integer", "minimum": 0 }
+      }
+    },
+    "TurnEvent": {
+      "description": "Agentic turn boundary — emitted when the agent starts a new reasoning turn",
+      "type": "object",
+      "required": ["turn_number"],
+      "properties": {
+        "turn_number": { "type": "integer", "minimum": 1 },
+        "total_tools": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ProgressEvent": {
+      "description": "Pipeline step progress update",
+      "type": "object",
+      "required": ["step", "percentage", "message"],
+      "properties": {
+        "step":       { "type": "string" },
+        "percentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "message":    { "type": "string" },
+        "sub_progress": {
+          "type": "object",
+          "required": ["current", "total", "item_title"],
+          "properties": {
+            "current":    { "type": "integer" },
+            "total":      { "type": "integer" },
+            "item_title": { "type": "string" }
+          }
+        }
+      }
+    },
+    "CreationEvent": {
+      "description": "Agent created a persistent artifact (document, record, etc.)",
+      "type": "object",
+      "required": ["creation_type", "count"],
+      "properties": {
+        "creation_type": { "type": "string" },
+        "count":         { "type": "integer", "minimum": 0 },
+        "tool_use_id":   { "type": "string" },
+        "items":         { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "ErrorEvent": {
+      "description": "Structured error during execution",
+      "type": "object",
+      "required": ["error_type", "message"],
+      "properties": {
+        "error_type": { "type": "string" },
+        "message":    { "type": "string" },
+        "details":    { "type": "object" }
+      }
+    },
+    "DoneEvent": {
+      "description": "Stream complete — always the last event",
+      "type": "object",
+      "properties": {
+        "message_id":     { "type": "string" },
+        "num_turns":      { "type": "integer", "minimum": 0 },
+        "tool_count":     { "type": "integer", "minimum": 0 },
+        "duration_ms":    { "type": "integer", "minimum": 0 },
+        "model":          { "type": "string" },
+        "total_cost_usd": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
