@@ -83,6 +83,32 @@ describe("AgentStreamClient", () => {
     expect(tokens).toEqual(["split"]);
   });
 
+  it("persists currentEventType when event: line and data: line are in separate chunks", async () => {
+    const encoder = new TextEncoder();
+    // Chunk 1: complete "event: token\n" — but NO data line yet
+    // Chunk 2: "data: {...}\n\n" — currentEventType must still be "token" here
+    const chunks = [
+      "event: token\n",
+      "data: {\"text\":\"persisted\"}\n\n",
+      "event: done\ndata: {\"message_id\":\"\",\"num_turns\":0,\"tool_count\":0,\"duration_ms\":0,\"is_error\":false}\n\n",
+    ];
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: new ReadableStream({
+        start(controller) {
+          for (const c of chunks) controller.enqueue(encoder.encode(c));
+          controller.close();
+        },
+      }),
+      json: async () => ({}),
+    });
+    const client = new AgentStreamClient();
+    const tokens: string[] = [];
+    await client.start("/api/chat", {}, { onToken: (t) => tokens.push(t) });
+    expect(tokens).toEqual(["persisted"]);
+  });
+
   it("emits synthetic done when stream ends without done event", async () => {
     mockFetch(["event: token\ndata: {\"text\":\"hi\"}\n\n"]);
     const client = new AgentStreamClient();

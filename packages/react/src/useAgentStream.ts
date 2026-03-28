@@ -51,6 +51,15 @@ export function useAgentStream(options: AgentStreamClientOptions = {}) {
       onToolUse: (e) => {
         if (e.status === "running") {
           setState((prev) => ({ ...prev, activeTools: [...prev.activeTools, e.toolName] }));
+        } else {
+          // Tool completed — remove it from activeTools by name (remove first occurrence)
+          setState((prev) => {
+            const idx = prev.activeTools.indexOf(e.toolName);
+            if (idx === -1) return prev;
+            const next = [...prev.activeTools];
+            next.splice(idx, 1);
+            return { ...prev, activeTools: next };
+          });
         }
         callbacks?.onToolUse?.(e);
       },

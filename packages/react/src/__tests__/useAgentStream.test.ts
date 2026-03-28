@@ -63,6 +63,19 @@ describe("useAgentStream", () => {
     expect(result.current.activeTools).toContain("search");
   });
 
+  it("removes tool from activeTools when it completes", async () => {
+    mockFetch([
+      "event: tool_use\ndata: {\"tool_name\":\"search\",\"tool_use_id\":\"t1\",\"status\":\"running\"}\n\n",
+      "event: tool_result\ndata: {\"tool_name\":\"search\",\"tool_use_id\":\"t1\",\"status\":\"done\"}\n\n",
+      "event: done\ndata: {\"message_id\":\"\",\"num_turns\":1,\"tool_count\":1,\"duration_ms\":10,\"is_error\":false}\n\n",
+    ]);
+    const { result } = renderHook(() => useAgentStream());
+    await act(async () => {
+      await result.current.startStream("/api/chat", {});
+    });
+    expect(result.current.activeTools).not.toContain("search");
+  });
+
   it("reset() clears state", async () => {
     mockFetch([
       "event: token\ndata: {\"text\":\"hi\"}\n\n",
