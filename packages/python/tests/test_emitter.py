@@ -75,12 +75,28 @@ def test_creation(emitter):
     ev, data = _parse(emitter.creation("insights", 5, tool_use_id="tu_abc"))
     assert ev == "creation"
     assert data["count"] == 5
+    assert data["creation_type"] == "insights"
+    assert data["tool_use_id"] == "tu_abc"
+    assert data["items"] == []  # default empty list always emitted
+
+
+def test_creation_defaults(emitter):
+    ev, data = _parse(emitter.creation("document", 1))
+    assert data["tool_use_id"] == ""
+    assert data["items"] == []
 
 
 def test_error(emitter):
     ev, data = _parse(emitter.error("timeout", "Request timed out"))
     assert ev == "error"
     assert data["error_type"] == "timeout"
+    assert data["message"] == "Request timed out"
+    assert data["details"] == {}  # default empty dict always emitted
+
+
+def test_error_with_details(emitter):
+    ev, data = _parse(emitter.error("auth", "Unauthorized", details={"code": 401}))
+    assert data["details"] == {"code": 401}
 
 
 def test_done(emitter):

@@ -84,7 +84,7 @@ class AgentStreamEmitter:
     ) -> str:
         """Pipeline step progress update."""
         data: dict[str, Any] = {"step": step, "percentage": percentage, "message": message}
-        if sub_progress:
+        if sub_progress is not None:
             data["sub_progress"] = sub_progress
         return _fmt("progress", data)
 
