@@ -2,7 +2,7 @@
 
 **The SSE event protocol for AI agents.**
 
-[![PyPI version](https://img.shields.io/pypi/v/agent-stream.svg)](https://pypi.org/project/agent-stream/)
+[![PyPI version](https://img.shields.io/pypi/v/agent-event-stream.svg)](https://pypi.org/project/agent-event-stream/)
 [![npm version](https://img.shields.io/npm/v/@agent-stream/react.svg)](https://www.npmjs.com/package/@agent-stream/react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
@@ -41,10 +41,10 @@ extracting this. It's not clever — it's just complete.
 **Python** — server / emitter:
 
 ```bash
-pip install agent-stream
+pip install agent-event-stream
 
 # With FastAPI helper:
-pip install "agent-stream[fastapi]"
+pip install "agent-event-stream[fastapi]"
 ```
 
 **React** — client hook:
