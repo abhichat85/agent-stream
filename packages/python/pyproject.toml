@@ -28,10 +28,11 @@ Changelog = "https://github.com/abhichat85/agent-stream/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.100"]
-dev = ["pytest>=8", "fastapi>=0.100", "httpx>=0.27"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "fastapi>=0.100", "httpx>=0.27"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["agent_stream"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
