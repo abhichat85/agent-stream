@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `AgentStreamRecorder` — drop-in async wrapper that records any SSE generator to a `.jsonl` file with millisecond timestamps. Append-safe; multiple sessions coexist in one file.
+- `agent-stream replay <file.jsonl>` CLI — replays recordings as valid SSE to stdout at original speed or adjusted with `--speed N`. `--list` prints a session summary table.
+- `.jsonl` recording format: human-readable, greppable, one JSON object per line. Session header + per-event records with relative timestamps (`t` seconds from stream start).
+
 ## [0.1.0] — 2026-03-29
 
 ### Added

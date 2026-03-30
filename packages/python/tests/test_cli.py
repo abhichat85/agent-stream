@@ -94,3 +94,61 @@ def test_replay_session_respects_speed(tmp_path):
 def test_load_sessions_missing_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_sessions(tmp_path / "nonexistent.jsonl")
+
+
+# ---------------------------------------------------------------------------
+# End-to-end tests: record via AgentStreamRecorder, then replay via CLI
+# ---------------------------------------------------------------------------
+
+import asyncio
+import subprocess
+import sys
+from agent_stream.recorder import AgentStreamRecorder
+from agent_stream.emitter import AgentStreamEmitter
+
+
+async def _run_and_record(path: Path) -> None:
+    emitter = AgentStreamEmitter()
+
+    async def stream():
+        yield emitter.token("hello")
+        yield emitter.tool_use("search", "tu_1", "query=test")
+        yield emitter.tool_result("search", "tu_1", "3 results", 100)
+        yield emitter.done(num_turns=1, tool_count=1)
+
+    recorder = AgentStreamRecorder(path)
+    async for _ in recorder.record(stream()):
+        pass
+
+
+def test_end_to_end_record_then_replay(tmp_path):
+    out = tmp_path / "stream.jsonl"
+    asyncio.run(_run_and_record(out))
+
+    # Replay via CLI subprocess at max speed
+    result = subprocess.run(
+        [sys.executable, "-m", "agent_stream.cli", "replay", str(out), "--speed", "10000"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "event: token" in result.stdout
+    assert "event: tool_use" in result.stdout
+    assert "event: tool_result" in result.stdout
+    assert "event: done" in result.stdout
+    assert '"text": "hello"' in result.stdout
+
+
+def test_end_to_end_list(tmp_path):
+    out = tmp_path / "stream.jsonl"
+    asyncio.run(_run_and_record(out))
+
+    result = subprocess.run(
+        [sys.executable, "-m", "agent_stream.cli", "replay", str(out), "--list"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "SESSION" in result.stdout
+    assert "token" in result.stdout
+    assert "done" in result.stdout

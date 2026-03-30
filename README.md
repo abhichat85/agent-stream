@@ -190,6 +190,43 @@ return agent_stream_response(generate())
 # Sets: Content-Type: text/event-stream, Cache-Control: no-cache, X-Accel-Buffering: no
 ```
 
+#### `AgentStreamRecorder` (Python)
+
+Records any live SSE stream to a `.jsonl` file for offline replay and debugging.
+
+```python
+from agent_stream.recorder import AgentStreamRecorder
+
+recorder = AgentStreamRecorder("session.jsonl")
+
+async def generate():
+    async for sse_str in recorder.record(agent_generator()):
+        yield sse_str  # passes through unchanged to StreamingResponse
+```
+
+**Replay recorded streams:**
+
+```bash
+# List sessions in a recording
+agent-stream replay session.jsonl --list
+
+# Replay at original speed
+agent-stream replay session.jsonl
+
+# Replay at 2x speed
+agent-stream replay session.jsonl --speed 2
+```
+
+**`.jsonl` format** — human-readable, greppable:
+
+```jsonl
+{"session": "a1b2c3...", "started_at": "2026-03-31T02:14:00+00:00", "t": 0}
+{"t": 0.0,   "event": "token",      "data": {"text": "Hello"}}
+{"t": 0.052, "event": "tool_use",   "data": {"tool_name": "search", ...}}
+{"t": 0.894, "event": "tool_result","data": {"duration_ms": 842, ...}}
+{"t": 1.204, "event": "done",       "data": {"num_turns": 1, ...}}
+```
+
 ---
 
 ### React / TypeScript
