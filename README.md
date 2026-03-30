@@ -29,6 +29,7 @@ extracting this. It's not clever — it's just complete.
 - [Quick start](#quick-start)
 - [Event schema](#event-schema)
 - [API reference](#api-reference)
+- [Recording & replay](#recording--replay)
 - [Hard-won production details](#hard-won-production-details)
 - [Examples](#examples)
 - [Contributing](#contributing)
@@ -38,7 +39,7 @@ extracting this. It's not clever — it's just complete.
 
 ## Install
 
-**Python** — server / emitter:
+**Python** — server / emitter + CLI:
 
 ```bash
 pip install agent-event-stream
@@ -46,6 +47,8 @@ pip install agent-event-stream
 # With FastAPI helper:
 pip install "agent-event-stream[fastapi]"
 ```
+
+Installs the `agent-stream` CLI command for replaying recordings.
 
 **React** — client hook:
 
@@ -190,43 +193,6 @@ return agent_stream_response(generate())
 # Sets: Content-Type: text/event-stream, Cache-Control: no-cache, X-Accel-Buffering: no
 ```
 
-#### `AgentStreamRecorder` (Python)
-
-Records any live SSE stream to a `.jsonl` file for offline replay and debugging.
-
-```python
-from agent_stream.recorder import AgentStreamRecorder
-
-recorder = AgentStreamRecorder("session.jsonl")
-
-async def generate():
-    async for sse_str in recorder.record(agent_generator()):
-        yield sse_str  # passes through unchanged to StreamingResponse
-```
-
-**Replay recorded streams:**
-
-```bash
-# List sessions in a recording
-agent-stream replay session.jsonl --list
-
-# Replay at original speed
-agent-stream replay session.jsonl
-
-# Replay at 2x speed
-agent-stream replay session.jsonl --speed 2
-```
-
-**`.jsonl` format** — human-readable, greppable:
-
-```jsonl
-{"session": "a1b2c3...", "started_at": "2026-03-31T02:14:00+00:00", "t": 0}
-{"t": 0.0,   "event": "token",      "data": {"text": "Hello"}}
-{"t": 0.052, "event": "tool_use",   "data": {"tool_name": "search", ...}}
-{"t": 0.894, "event": "tool_result","data": {"duration_ms": 842, ...}}
-{"t": 1.204, "event": "done",       "data": {"num_turns": 1, ...}}
-```
-
 ---
 
 ### React / TypeScript
@@ -275,6 +241,51 @@ client.stop(); // abort
 
 ---
 
+## Recording & replay
+
+`AgentStreamRecorder` wraps any async SSE generator and records it to a `.jsonl` file — zero impact on latency, drop-in with no other changes. When something goes wrong in production, you have the exact event sequence to replay.
+
+```python
+from agent_stream.recorder import AgentStreamRecorder
+
+recorder = AgentStreamRecorder("session.jsonl")
+
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    async def generate():
+        async for sse_str in recorder.record(agent_generator(req.message)):
+            yield sse_str  # passes through unchanged
+
+    return agent_stream_response(generate())
+```
+
+**Replay a recording:**
+
+```bash
+# List sessions in a file
+agent-stream replay session.jsonl --list
+
+# Replay at original timing
+agent-stream replay session.jsonl
+
+# Replay at 2× speed (great for slow tool calls)
+agent-stream replay session.jsonl --speed 2
+```
+
+**`.jsonl` format** — one line per event, human-readable, greppable:
+
+```jsonl
+{"session": "a1b2c3...", "started_at": "2026-03-31T02:14:00+00:00", "t": 0}
+{"t": 0.0,   "event": "token",      "data": {"text": "Hello"}}
+{"t": 0.052, "event": "tool_use",   "data": {"tool_name": "search", ...}}
+{"t": 0.894, "event": "tool_result","data": {"duration_ms": 842, ...}}
+{"t": 1.204, "event": "done",       "data": {"num_turns": 1, ...}}
+```
+
+Multiple sessions append to the same file — each session has its own UUID and `t=0` baseline.
+
+---
+
 ## Hard-won production details
 
 **Token batching prevents UI thrash.** A fast model emits 30–40 text chunks per second. Without batching, React re-renders on every chunk. `TokenBatcher(interval_ms=50)` accumulates tokens and flushes every 50ms — ~20 renders/second instead of 40.
@@ -286,6 +297,8 @@ client.stop(); // abort
 **Exponential backoff reconnect.** Network errors trigger automatic reconnect with delays of 1s → 2s → 4s (3 retries). HTTP errors (4xx/5xx) do not retry — they won't self-resolve.
 
 **`activeTools` tracks in-flight tools only.** When a `tool_result` event arrives, the tool name is removed from `activeTools`. The array reflects what's *currently running*, not everything that has run.
+
+**Record first, debug later.** Production stream bugs are almost impossible to reproduce locally — they only appear under real network conditions with real token rates. `AgentStreamRecorder` records every production stream to `.jsonl` automatically. When something breaks, `agent-stream replay session.jsonl` plays back the exact sequence at any speed.
 
 ---
 
@@ -301,7 +314,7 @@ To run both together:
 ```bash
 # Terminal 1 — backend
 cd examples/fastapi-anthropic
-pip install fastapi uvicorn anthropic "agent-stream[fastapi]"
+pip install fastapi uvicorn anthropic "agent-event-stream[fastapi]"
 ANTHROPIC_API_KEY=sk-... uvicorn main:app --reload
 
 # Terminal 2 — frontend
